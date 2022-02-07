@@ -1,6 +1,7 @@
 package model.entities;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class Department implements Serializable {
 
@@ -61,5 +62,10 @@ public class Department implements Serializable {
 	@Override
 	public String toString() {
 		return "Department [id=" + id + ", name=" + name + "]";
+	}
+
+	public List<Department> findAll() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
