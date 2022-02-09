@@ -3,8 +3,6 @@ package model.exception;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.mysql.jdbc.Field;
-
 public class ValidationException extends RuntimeException {
 
 	private static final long serialVersionUID = 1L;
