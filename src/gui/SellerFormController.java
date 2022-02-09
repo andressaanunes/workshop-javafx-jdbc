@@ -1,8 +1,11 @@
 package gui;
 
 import java.net.URL;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -17,8 +20,11 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import model.entities.Department;
 import model.entities.Seller;
 import model.exception.ValidationException;
 import model.services.SellerService;
@@ -29,16 +35,37 @@ public class SellerFormController implements Initializable {
 
 	private SellerService service;
 
-	private List<DataChangeListener> dataChangeListners = new ArrayList<>();
+	private List<DataChangeListener> dataChangeListeners = new ArrayList<>();
 
 	@FXML
-	private TextField txtid;
+	private TextField txtId;
 
 	@FXML
 	private TextField txtName;
 
 	@FXML
+	private TextField txtEmail;
+
+	@FXML
+	private DatePicker dpBirthDate;
+
+	@FXML
+	private TextField txtBaseSalary;
+
+	@FXML
+	private ComboBox<Department> comboBoxDepartment;
+
+	@FXML
 	private Label labelErrorName;
+
+	@FXML
+	private Label labelErrorEmail;
+
+	@FXML
+	private Label labelErrorBirthDate;
+
+	@FXML
+	private Label labelErrorBaseSalary;
 
 	@FXML
 	private Button btSave;
@@ -52,12 +79,10 @@ public class SellerFormController implements Initializable {
 
 	public void setSellerService(SellerService service) {
 		this.service = service;
-
 	}
 
 	public void subscribeDataChangeListener(DataChangeListener listener) {
-		dataChangeListners.add(listener);
-
+		dataChangeListeners.add(listener);
 	}
 
 	@FXML
@@ -71,7 +96,7 @@ public class SellerFormController implements Initializable {
 		try {
 			entity = getFormData();
 			service.saveOrUpdate(entity);
-			notifyDataChangeListener();
+			notifyDataChangeListeners();
 			Utils.currentStage(event).close();
 		} catch (ValidationException e) {
 			setErrorMessages(e.getErros());
@@ -80,22 +105,21 @@ public class SellerFormController implements Initializable {
 		}
 	}
 
-	private void notifyDataChangeListener() {
-		for (DataChangeListener listener : dataChangeListners) {
+	private void notifyDataChangeListeners() {
+		for (DataChangeListener listener : dataChangeListeners) {
 			listener.onDataChanged();
 		}
-
 	}
 
 	private Seller getFormData() {
 		Seller obj = new Seller();
 
-		ValidationException exception = new ValidationException("Validation Error");
+		ValidationException exception = new ValidationException("Validation error");
 
-		obj.setId(Utils.tryParseToInt(txtid.getText()));
+		obj.setId(Utils.tryParseToInt(txtId.getText()));
 
 		if (txtName.getText() == null || txtName.getText().trim().equals("")) {
-			exception.addError("Name", "Field can't be empty");
+			exception.addError("name", "Field can't be empty");
 		}
 		obj.setName(txtName.getText());
 
@@ -108,36 +132,38 @@ public class SellerFormController implements Initializable {
 
 	@FXML
 	public void onBtCancelAction(ActionEvent event) {
-		System.out.println("onBtCancelAction");
 		Utils.currentStage(event).close();
-	}
-
-	private void initializeNodes() {
-		Constraints.setTextFieldInteger(txtid);
-		Constraints.setTextFieldMaxLength(txtName, 30);
-
 	}
 
 	@Override
 	public void initialize(URL url, ResourceBundle rb) {
 		initializeNodes();
+	}
 
+	private void initializeNodes() {
+		Constraints.setTextFieldInteger(txtId);
+		Constraints.setTextFieldMaxLength(txtName, 30);
 	}
 
 	public void updateFormData() {
 		if (entity == null) {
 			throw new IllegalStateException("Entity was null");
 		}
-		txtid.setText(String.valueOf(entity.getId()));
+		txtId.setText(String.valueOf(entity.getId()));
 		txtName.setText(entity.getName());
+		txtEmail.setText(entity.getEmail());
+		Locale.setDefault(Locale.US);
+		txtBaseSalary.setText(String.format("%.2f", entity.getBaseSalary()));
+		if (entity.getBirthDate() != null) {
+			dpBirthDate.setValue(LocalDate.ofInstant(entity.getBirthDate().toInstant(), ZoneId.systemDefault()));
+		}
 	}
 
-	private void setErrorMessages(Map<String, String> erros) {
-		Set<String> fields = erros.keySet();
+	private void setErrorMessages(Map<String, String> errors) {
+		Set<String> fields = errors.keySet();
 
-		if (fields.contains("Name")) {
-			labelErrorName.setText(erros.get("Name"));
+		if (fields.contains("name")) {
+			labelErrorName.setText(errors.get("name"));
 		}
-
 	}
 }
